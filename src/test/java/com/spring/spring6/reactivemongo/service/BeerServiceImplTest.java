@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
-class BeerServiceImplTest {
+public class BeerServiceImplTest {
     @Autowired
     BeerService beerService;
 
@@ -89,11 +89,9 @@ class BeerServiceImplTest {
                     savedBeerDto.setName(newName);
                     return savedBeerDto;
                 })
-                .flatMap(beerService::saveBeer) // save updated beer
+                .flatMap(beerToUpdate -> beerService.updateBeer(beerToUpdate.getId(), beerToUpdate)) // save updated beer
                 .flatMap(savedUpdatedDto -> beerService.getById(savedUpdatedDto.getId())) // get from db
-                .subscribe(dtoFromDb -> {
-                    atomicDto.set(dtoFromDb);
-                });
+                .subscribe(atomicDto::set);
 
         await().until(() -> atomicDto.get() != null);
         assertThat(atomicDto.get().getName()).isEqualTo(newName);

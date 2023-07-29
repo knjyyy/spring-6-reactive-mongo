@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @Builder
 @Document
 public class Customer {
-
     @Id
     private String id;
     @Size(max=255)
