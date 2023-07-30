@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockOAuth2Login;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
@@ -27,21 +28,24 @@ public class CustomerEndpointTest {
 
     public CustomerDTO getSavedCustomer() {
         FluxExchangeResult<CustomerDTO> customerDTOFluxExchangeResult =
-        webTestClient.post().uri(CustomerRouterConfig.CUSTOMER_PATH)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .post().uri(CustomerRouterConfig.CUSTOMER_PATH)
                 .body(Mono.just(CustomerServiceImplTest.getCustomer()), CustomerDTO.class)
                 .header("Content-type", "application/json")
                 .exchange()
                 .returnResult(CustomerDTO.class);
 
         List<String> location = customerDTOFluxExchangeResult.getResponseHeaders().get("Location");
-        return webTestClient.get().uri(CustomerRouterConfig.CUSTOMER_PATH)
+        return webTestClient.mutateWith(mockOAuth2Login())
+                .get().uri(CustomerRouterConfig.CUSTOMER_PATH)
                 .exchange().returnResult(CustomerDTO.class).getResponseBody().blockFirst();
     }
 
     @Test
     @Order(1)
     void testListCustomers() {
-        webTestClient.get().uri(CustomerRouterConfig.CUSTOMER_PATH)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .get().uri(CustomerRouterConfig.CUSTOMER_PATH)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Type", "application/json")
@@ -52,7 +56,8 @@ public class CustomerEndpointTest {
     @Order(2)
     void testGetCustomerById() {
         CustomerDTO customerDTO = getSavedCustomer();
-        webTestClient.get().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
+        webTestClient.mutateWith(mockOAuth2Login())
+                .get().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals("Content-Type", "application/json")
@@ -62,7 +67,8 @@ public class CustomerEndpointTest {
     @Test
     @Order(3)
     void testGetCustomerByIdNotFound() {
-        webTestClient.get().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 999)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .get().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 999)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -74,12 +80,14 @@ public class CustomerEndpointTest {
         CustomerDTO customerDTO = getSavedCustomer();
         customerDTO.setName(name);
 
-        webTestClient.post().uri(CustomerRouterConfig.CUSTOMER_PATH)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .post().uri(CustomerRouterConfig.CUSTOMER_PATH)
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .header("Content-Type", "application/json")
                 .exchange();
 
-        webTestClient.get().uri(UriComponentsBuilder
+        webTestClient.mutateWith(mockOAuth2Login())
+                .get().uri(UriComponentsBuilder
                 .fromPath(CustomerRouterConfig.CUSTOMER_PATH)
                 .queryParam("name", name).build().toUri())
                 .exchange()
@@ -92,7 +100,8 @@ public class CustomerEndpointTest {
     @Order(5)
     void testCreateCustomer() {
         CustomerDTO customerDTO = getSavedCustomer();
-        webTestClient.post().uri(CustomerRouterConfig.CUSTOMER_PATH)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .post().uri(CustomerRouterConfig.CUSTOMER_PATH)
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .header("Content-Type", "application/json")
                 .exchange()
@@ -106,7 +115,8 @@ public class CustomerEndpointTest {
         CustomerDTO customerDTO = getSavedCustomer();
         customerDTO.setName("");
 
-        webTestClient.post().uri(CustomerRouterConfig.CUSTOMER_PATH)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .post().uri(CustomerRouterConfig.CUSTOMER_PATH)
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .header("Content-Type", "application/json")
                 .exchange()
@@ -119,7 +129,8 @@ public class CustomerEndpointTest {
         CustomerDTO customerDTO = getSavedCustomer();
         customerDTO.setName("Gnarls Barkley");
 
-        webTestClient.put().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
+        webTestClient.mutateWith(mockOAuth2Login())
+                .put().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .exchange()
                 .expectStatus().isNoContent();
@@ -131,7 +142,8 @@ public class CustomerEndpointTest {
         CustomerDTO customerDTO = getSavedCustomer();
         customerDTO.setName("");
 
-        webTestClient.put().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
+        webTestClient.mutateWith(mockOAuth2Login())
+                .put().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .exchange()
                 .expectStatus().isBadRequest();
@@ -142,7 +154,8 @@ public class CustomerEndpointTest {
     void testUpdateCustomerNotFound() {
         CustomerDTO customerDTO = getSavedCustomer();
 
-        webTestClient.put().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 9999)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .put().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 9999)
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -154,7 +167,8 @@ public class CustomerEndpointTest {
         CustomerDTO customerDTO = getSavedCustomer();
         customerDTO.setName("Brendan Urie");
 
-        webTestClient.patch().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
+        webTestClient.mutateWith(mockOAuth2Login())
+                .patch().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .exchange()
                 .expectStatus().isNoContent();
@@ -166,7 +180,8 @@ public class CustomerEndpointTest {
         CustomerDTO customerDTO = getSavedCustomer();
         customerDTO.setName("");
 
-        webTestClient.patch().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
+        webTestClient.mutateWith(mockOAuth2Login())
+                .patch().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .exchange()
                 .expectStatus().isBadRequest();
@@ -176,7 +191,8 @@ public class CustomerEndpointTest {
     @Order(12)
     void testPatchCustomerNotFound() {
         CustomerDTO customerDTO = getSavedCustomer();
-        webTestClient.patch().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 9999)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .patch().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 9999)
                 .body(Mono.just(customerDTO), CustomerDTO.class)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -186,7 +202,8 @@ public class CustomerEndpointTest {
     @Order(13)
     void testDeleteCustomer() {
         CustomerDTO customerDTO = getSavedCustomer();
-        webTestClient.delete().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
+        webTestClient.mutateWith(mockOAuth2Login())
+                .delete().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, customerDTO.getId())
                 .exchange()
                 .expectStatus().isNoContent();
     }
@@ -195,7 +212,8 @@ public class CustomerEndpointTest {
     @Order(14)
     void testDeleteCustomerNotFound() {
         CustomerDTO customerDTO = getSavedCustomer();
-        webTestClient.delete().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 899999)
+        webTestClient.mutateWith(mockOAuth2Login())
+                .delete().uri(CustomerRouterConfig.CUSTOMER_PATH_ID, 899999)
                 .exchange()
                 .expectStatus().isNotFound();
     }
